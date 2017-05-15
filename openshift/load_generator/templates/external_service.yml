@@ -1,0 +1,38 @@
+apiVersion: v1
+kind: Template
+metadata:
+  creationTimestamp: null
+  name: external-web-service
+objects:
+- kind: "Service"
+  apiVersion: "v1"
+  metadata:
+    name: ${SERVICE_NAME}
+  spec:
+    ports:
+      - name: "http"
+        protocol: "TCP"
+        port: 80
+        targetPort: 80
+        nodePort: 0
+  selector: {}
+- kind: "Endpoints"
+  apiVersion: "v1"
+  metadata:
+    name: ${ENDPOINT_NAME}
+  subsets:
+    - addresses:
+        - ip: "${EXTERNAL_IP}"
+      ports:
+        - name: "http"
+          port: 80
+parameters:
+- name: SERVICE_NAME
+  value: external-website
+  required: true
+- name: ENDPOINT_NAME
+  value: external-website
+  required: true
+- name: EXTERNAL_IP
+  value: 192.168.50.23
+  required: true

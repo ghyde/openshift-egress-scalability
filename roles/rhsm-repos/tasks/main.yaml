@@ -1,0 +1,54 @@
+---
+- block:
+    - name: disable unneeded repos
+      command: subscription-manager repos --disable='*'
+
+    # - name: check release version
+    #   command: subscription-manager release --show
+    #   register: release_version
+    #   changed_when: no
+    #
+    # - name: set release version to 7.2
+    #   command: subscription-manager release --set=7.2
+    #   when: "'7.2' not in release_version.stdout"
+
+    - name: Exclude packages
+      lineinfile:
+        dest: /etc/yum.conf
+        #insertafter: '^\[main\]'
+        insertafter: EOF
+        regexp: '^exclude='
+        line: 'exclude={{ excluded_packages | join(" ") }}'
+
+    - name: ensure proper repos are assigned
+      command: subscription-manager repos --enable={{ item }}
+      with_items:
+        - rhel-7-server-rpms
+        - rhel-7-server-extras-rpms
+        - rhel-7-server-ose-3.3-rpms
+
+    - name: check to see if rhui exists
+      stat:
+        path: /etc/yum.repos.d/redhat-rhui.repo
+      register: rhui
+
+    - name: check to see if rhui client exists
+      stat:
+        path: /etc/yum.repos.d/redhat-rhui-client-config.repo
+      register: client
+
+    - name: disable rhui repo
+      replace:
+        dest: /etc/yum.repos.d/redhat-rhui.repo
+        regexp: 'enabled=1'
+        replace: 'enabled=0'
+      when: rhui.stat.exists
+
+    - name: disable rhui client repos
+      replace:
+        dest: /etc/yum.repos.d/redhat-rhui-client-config.repo
+        regexp: 'enabled=1'
+        replace: 'enabled=0'
+      when: client.stat.exists
+
+  when: ansible_distribution == "RedHat"

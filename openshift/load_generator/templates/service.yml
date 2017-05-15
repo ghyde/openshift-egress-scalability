@@ -1,0 +1,22 @@
+apiVersion: v1
+kind: Template
+metadata:
+  creationTimestamp: null
+  name: service-template
+objects:
+- kind: Service
+  apiVersion: v1
+  metadata:
+    name: ${SERVICE_NAME}
+  spec:
+    ports:
+    - name: http
+      port: 80
+      protocol: TCP
+      targetPort: 80
+    type: ClusterIP
+    selector:
+      name: egress
+parameters:
+- name: SERVICE_NAME
+  required: true

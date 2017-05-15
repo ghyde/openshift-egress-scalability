@@ -1,0 +1,33 @@
+---
+- set_fact:
+    required_packages:
+      - docker
+      - nginx
+
+- name: install packages
+  package:
+    name: "{{ item }}"
+    state: present
+  with_items: "{{ required_packages }}"
+
+- name: start services
+  service:
+    name: "{{ item }}"
+    state: started
+    enabled: yes
+  with_items: "{{ required_packages }}"
+
+- name: open port 80
+  iptables:
+    chain: INPUT
+    protocol: tcp
+    match: tcp
+    destination_port: 80
+    jump: ACCEPT
+
+- name: persist firewall rule
+  lineinfile:
+    dest: /etc/sysconfig/iptables
+    line: "-A INPUT -p tcp -m tcp --dport 80 -j ACCEPT"
+    insertafter: '^:OS_FIREWALL_ALLOW'
+    backup: yes

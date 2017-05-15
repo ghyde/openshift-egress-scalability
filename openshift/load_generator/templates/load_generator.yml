@@ -1,0 +1,57 @@
+apiVersion: v1
+kind: Template
+labels:
+  template: egress-load-generator-template
+metadata:
+  annotations:
+    description: Load generator for egress testing.
+    iconClass: icon-shadowman
+    openshift.io/display-name: Egress Load Generator
+  creationTimestamp: null
+  name: egress-load-generator-template
+objects:
+- apiVersion: v1
+  kind: ImageStream
+  metadata:
+    name: ${APP_NAME}
+    labels:
+      app: ${APP_NAME}
+- apiVersion: v1
+  kind: BuildConfig
+  metadata:
+    name: ${APP_NAME}
+    labels:
+      app: ${APP_NAME}
+  spec:
+    output:
+      to:
+        kind: ImageStreamTag
+        name: ${APP_NAME}:latest
+    source:
+      type: Git
+      git:
+        uri: ${GIT_URI}
+        ref: ${GIT_REF}
+      contextDir: ${GIT_CONTEXT_DIR}
+    strategy:
+      type: Docker
+      dockerStrategy:
+        from:
+          kind: DockerImage
+          name: rhel7/rhel
+    triggers:
+    - type: ImageChange
+    - type: ConfigChange
+parameters:
+- name: APP_NAME
+  value: load-generator
+  required: true
+- name: GIT_URI
+  value: https://github.com/ghyde/openshift-egress-scalability.git
+  required: true
+- name: GIT_REF
+  value: master
+  required: true
+- name: GIT_CONTEXT_DIR
+  value: openshift/load_generator/
+  required: true

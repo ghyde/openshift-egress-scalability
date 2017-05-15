@@ -1,0 +1,51 @@
+apiVersion: v1
+kind: Template
+labels:
+  template: egress-load-generator-job-template
+metadata:
+  annotations:
+    description: Load generator for egress testing.
+    iconClass: icon-shadowman
+    openshift.io/display-name: Egress Load Generator Job
+  creationTimestamp: null
+  name: egress-load-generator-job-template
+objects:
+- apiVersion: batch/v1
+  kind: Job
+  metadata:
+    name: ${APP_NAME}
+  spec:
+    parallelism: ${PARALLEL}
+    completions: ${PARALLEL}
+    template:
+      metadata:
+        name: load-generator
+      spec:
+        containers:
+        - name: load-generator
+          image: ${IMAGE}
+          command: ["ab", "-n", "${REQUESTS}", "-c", "${CONCURRENCY}", "${URL}"]
+        restartPolicy: Never
+        nodeSelector:
+          tier: ${TIER}
+parameters:
+- name: APP_NAME
+  value: load-generator
+  required: true
+- name: PARALLEL
+  value: "1"
+  required: true
+- name: IMAGE
+  required: true
+- name: REQUESTS
+  value: "1000"
+  required: true
+- name: CONCURRENCY
+  value: "10"
+  required: true
+- name: URL
+  value: "http://admin1.example.com/"
+  required: true
+- name: TIER
+  value: app
+  required: true
